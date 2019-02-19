@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="sharMapper">
+	<resultMap id="sharValues" type="sharVo">
+		<result property="sharSeq" column="shar_seq"/>   <!-- 공유SEQ -->
+		<result property="nmeCardSeq" column="nmecard_seq"/> <!-- 명함SEQ -->
+		<result property="sharType" column="shar_type"/> <!-- 공유 타입 -->
+		<result property="sharCretDate" column="shar_cret_date"/>		 <!-- 공유날짜 -->
+		<result property="memSeq" column="mem_seq"/>
+		<result property="memNme" column="mem_nme"/>
+		
+	
+		<result property="memDepmtNme" column="mem_depmt_nme"/>
+		<result property="memPostnNme" column="mem_postn_nme"/>
+		<result property="memEmail" column="mem_email"/>
+		<result property="sharCount" column="shar_count"/>
+		<result property="gropseq" column="grop_seq"/>
+		<result property="noneSharCount" column="none_shar_count"/>
+	</resultMap>
+	<resultMap id="sharSapValues" type="SharSapVo">
+		<result property="sharSearchBgnDe" column="sharSearchBgnDe"/>
+		<result property="sharSearchEndDe" column="sharSearchEndDe"/>
+		<result property="sharSearchCnd" column="sharSearchCnd"/>
+		<result property="sharSearchWrd" column="sharSearchWrd"/>
+		<result property="sharSearchAry" column="sharSearchAry"/>
+		<result property="sharSearchAfter" column="sharSearchAfter"/>
+		<result property="sharSearchBefore" column="sharSearchBefore"/>
+		<result property="sharCurrentPageNo" column="sharCurrentPageNo"/>
+		<result property="sharRecordCountPerPage" column="sharRecordCountPerPage"/>
+		<result property="sharPageSize" column="sharPageSize"/>
+		<result property="sharTotalRecordCount" column="sharTotalRecordCount"/>
+		<result property="sharTotalPageCount" column="sharTotalPageCount"/>
+		<result property="sharFirstRecordIndex" column="sharFirstRecordIndex"/>
+		<result property="sharLastRecordIndex" column="sharLastRecordIndex"/>
+		<result property="sharFirstPageNoOnPageList" column="sharFirstPageNoOnPageList"/>
+		<result property="sharLastPageNoOnPageList" column="sharLastPageNoOnPageList"/>
+	</resultMap>
+<!-- 전체 회원 리스트 -->
+	<select id="selectMemList"  resultMap="sharValues" parameterType="sharVo">
+		SELECT
+			mem.memSeq as memseq,
+			mem.memname as memname, 
+			dep.depart_name as memdepmtnme, 
+			mem.memtitle as memtitle, 
+			mem.mememail as mememail
+		FROM
+		mem_tb mem
+		RIGHT JOIN depmt_tb dep
+		ON mem.memdepmtseq=dep.depart_seq
+        WHERE
+        mem.memseq !=#{memSeq};
+	</select>
+	<!-- 	공유 안하는 리스트 카운트 -->
+	<select id="noneSharMemCount"  resultType="int" parameterType="sharVo">
+		SELECT  Count(mem.memSeq) as none_shar_count 
+		FROM
+				mem_tb mem
+				RIGHT JOIN depmt_tb dep
+				ON mem.memdepmtseq=dep.depart_seq
+				<if test="gropSeq!=0">
+				RIGHT JOIN grop_mem_tb grop
+				ON grop.mem_seq=mem.mem_seq
+		                 and grop.grop_seq=#{gropSeq}
+		                 </if>
+		WHERE
+		mem.memseq not in(SELECT shar.mem_seq
+									FROM shar_tb as shar
+									WHERE shar.nmecard_seq = #{nmeCardSeq}  
+									AND shar.shar_type ='Y'
+									)
+		and mem.memseq not in (SELECT dump.mem_seq
+										   FROM dump_tb as dump
+										   WHERE dump.nmecard_seq = #{nmeCardSeq} 
+										   AND dump.shar_type ='Y')
+		and mem.memseq !=#{memSeq}
+<!-- 		<if test="sharSearchCnd == 1"> -->
+<!-- 	  		AND memname LIKE '%' #{sharSearchWrd}'%' -->
+<!-- 		<if test="sharSearchCnd == 2"> -->
+<!-- 		   AND dep.depart_name LIKE #{sharSearchWrd} -->
+<!-- 		</if>	 -->
+<!-- 		</if> -->
+		;
+	</select>
+	<!-- 공유 임시 저장 리스트 -->
+	<select id="dumpMemList"  resultMap="sharValues" parameterType="sharVo">
+	SELECT mem.memSeq,
+			  mem.memname as memname, 
+			  dep.depart_name as memdepmtnme,
+			  mem.memtitle as memtitle, 
+			  mem.mememail as mememail
+	FROM dump_tb dump,mem_tb mem
+	RIGHT JOIN depmt_tb dep
+	ON mem.memdepmtseq=dep.depart_seq
+	WHERE dump.shar_type='y' 
+	and mem.memseq = dump.mem_seq 
+	and dump.nmecard_seq = #{nmeCardSeq};
+	</select>
+<!-- 	공유 안하는 리스트 -->
+	<select id="nonSharMemList"  resultMap="sharValues" parameterType="sharVo">
+		SELECT  mem.memSeq as memseq,
+		mem.memname as memname,
+		dep.depart_name as memdepmtnme,
+		mem.memtitle as memtitle,
+		mem.mememail as mememail
+		FROM
+			mem_tb mem
+			RIGHT JOIN depmt_tb dep
+			ON mem.memdepmtseq=dep.depart_seq
+			<if test="gropSeq!=0">
+			RIGHT JOIN grop_mem_tb grop
+			ON grop.mem_seq=mem.memseq
+	                 and grop.grop_seq=#{gropSeq}
+	                 </if>
+		WHERE
+		mem.memseq not in(SELECT shar.mem_seq
+									FROM shar_tb as shar
+									WHERE shar.nmecard_seq = #{nmeCardSeq}  
+									AND shar.shar_type ='Y'
+									)
+		and mem.memseq not in (SELECT dump.mem_seq
+										   FROM dump_tb as dump
+										   WHERE dump.nmecard_seq = #{nmeCardSeq} 
+										   AND dump.shar_type ='Y')
+		and mem.memseq !=#{memSeq}
+<!-- 		<if test="sharSearchCnd == 1"> -->
+<!-- 	  		AND memname LIKE '%' #{sharSearchWrd} '%' -->
+<!-- 		</if> -->
+<!-- 		<if test="sharSearchCnd == 2"> -->
+<!-- 		   AND dep.depart_name LIKE#{sharSearchWrd} -->
+<!-- 		</if>	 -->
+		LIMIT #{sharRecordCountPerPage} OFFSET #{sharFirstRecordIndex};
+	</select>
+</mapper>
+	

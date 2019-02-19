@@ -1,0 +1,73 @@
+@charset "UTF-8";
+
+
+div.card{
+	
+    min-height: 400px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 0px;
+    margin-right: 200px;
+}
+
+
+table.tb-radius{
+	
+	width: 250px;
+    height: 170px;
+    border: 1px #333;
+    background: #F8F8F8;
+    -webkit-border-radius: 5px;
+	
+}
+div.wrapper{
+	
+	width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    font-size: 100%;
+	
+}
+#cardBox{
+	
+	width:250px; 
+	height:150px;
+	font-size:15px;
+	box-shadow:6px 6px 6px #adadad;
+}
+.product-list li {
+	
+    width: 250px;
+    height: 150px;
+    float: left;
+    margin: 0 0 40px 20px;
+    position: relative;
+}
+
+/*리스트 스타일 무효화*/
+ul, li {
+    list-style: none;
+}
+
+li {
+    display: list-item;
+    text-align: -webkit-match-parent;
+}
+
+ul {
+	
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul, menu, dir {
+	
+    display: block;
+    list-style-type: disc;
+    -webkit-margin-before: 1em;
+    -webkit-margin-after: 1em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    -webkit-padding-start: 40px;
+}

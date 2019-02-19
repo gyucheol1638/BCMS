@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="memberMapper">
+
+	<resultMap id="membervalue" type="mvo">
+		<result property="mem_seq" column="mem_seq" />
+	</resultMap>
+	
+	<resultMap id="companyvalues" type="companyVo">
+		<result property="mem_seq" column="mem_seq" />
+
+	</resultMap>
+	
+	
+	<select id="companylist" parameterType="companyVo" resultMap="companyvalues">
+		SELECT company_seq
+		,company_name
+		FROM compn_tb
+		ORDER BY company_name ASC;
+	</select>
+	<select id="departlist" parameterType="companyVo" resultMap="companyvalues">
+		SELECT depart_seq
+		,depart_name
+		FROM depmt_tb
+		ORDER BY depart_name ASC;
+	</select>
+<!-- 	아이디 중복 확인 -->
+
+	<select id="idCount" parameterType="String" resultType="int">
+
+		SELECT count(memid) AS idCount
+		FROM mem_tb
+		WHERE memid = #{memId};
+
+	</select>
+<!-- 	로그인 -->
+	<select id="loginCheck" parameterType="vo" resultType="mvo">
+
+		SELECT *
+		FROM mem_tb
+		WHERE memid = #{memId}
+		AND	  mempw = #{memPw};
+	</select>
+<!-- 	회원 등록  -->
+	<insert id="insertMembership" parameterType="vo" >
+		
+		INSERT
+		INTO mem_tb(
+			memseq
+			,memid
+			,mempw
+			,memname
+			,memsex
+			,memcompnseq
+			,memdepmtseq
+			,memtitle
+			,membirth
+			,mememail
+			,memmobil
+			,memjoindate
+		)VALUE(
+			(SELECT IFNULL(MAX(a.memseq),0)+1 FROM mem_tb AS a)
+			,#{memId}
+			,#{memPw}
+			,#{memName}
+			,#{memSex}
+			,#{memCompnSeq}
+			,#{memDepmtSeq}
+			,#{memTitle}
+			,#{memBirth}
+			,concat(#{memEmail1},'@',#{memEmail2})
+			,concat(#{memMobil1},#{memMobil2},#{memMobil3})
+			,CURDATE());
+			
+		
+	</insert>
+	<!-- 회원 전체조회 -->
+	<select id="selectMemList" resultMap="membervalue">
+		SELECT memname, memseq
+		FROM mem_tb;
+	</select>	
+</mapper>

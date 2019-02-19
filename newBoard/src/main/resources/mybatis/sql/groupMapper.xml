@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="groupMapper">
+   <resultMap id="groupValues" type="groupVo">
+      <result property="gropSeq" column="grop_seq"/>
+      <result property="gropNme" column="grop_nme"/>
+      <result property="gropCretDate" column="grop_cret_date"/>
+      <result property="gropMemSeq" column="grop_mem_seq"/>
+      <result property="gropMemCretDate" column="grop_mem_cret_date"/>
+      <result property="memSeq" column="mem_seq"/>
+      <result property="memNme" column="mem_nme"/>
+      <result property="depmtNme" column="depmt_nme"/>
+      <result property="memPostnNme" column="mem_postn_nme"/>
+      <result property="memMobil" column="mem_mobil"/>
+      <result property="memEmail" column="mem_email"/>
+   </resultMap>
+   
+   <resultMap id="mpValues" type="mpVo">
+      <result property="memSearchCnd" column="memSearchCnd"/>
+      <result property="memSearchWrd" column="memSearchWrd"/>
+      <result property="memSearchAry" column="memSearchAry"/>
+      <result property="memCurrentPageNo" column="memCurrentPageNo"/>
+      <result property="memRecordCountPerPage" column="memRecordCountPerPage"/>
+      <result property="memPageSize" column="memPageSize"/>
+      <result property="memTotalRecordCount" column="memTotalRecordCount"/>
+      <result property="memTotalPageCount" column="memTotalPageCount"/>
+      <result property="memFirstPageNoOnPageList" column="memFirstPageNoOnPageList"/>
+      <result property="memLastPageNoOnPageList" column="memLastPageNoOnPageList"/>
+      <result property="memFirstRecordIndex" column="memFirstRecordIndex"/>
+      <result property="memLastRecordIndex" column="memLastRecordIndex"/>
+   </resultMap>
+	<!-- 그룹명 조회 -->
+      <select id="groplist" parameterType="groupVo" resultMap="groupValues">
+         SELECT *
+         FROM 
+         	grop_tb
+         WHERE 
+         	mem_seq = #{memSeq};
+      </select>
+</mapper>

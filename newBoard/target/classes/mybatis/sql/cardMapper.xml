@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="cardMapper">
+
+	<resultMap id="cardvalue" type="cvo">
+	    <result property="mem_seq" column="mem_seq"/>
+
+	</resultMap>
+	<resultMap id="nmeCardComnctnValues" type="comnctnNmeCardVo">
+<!-- 		<result property="memnme" column="memname"/> -->
+	</resultMap>
+	
+	
+<!-- 	<resultMap id="Values" type="Vo"> -->
+<!--         <result property="seq" column="seq"/> -->
+<!--         <result property="data" column="data"/> -->
+<!--    </resultMap> -->
+
+<!--     <select id="Value" resultMap="Values"> -->
+<!--         SELECT -->
+<!--         * -->
+<!--         FROM -->
+<!--         a; -->
+<!--     </select> -->
+
+<select id="cardselect" parameterType="cvo" resultMap="cardvalue">
+		SELECT
+			cretrseq
+			, nmecardseq
+			, concat(nmecardlastnme, nmecardfirstnme) as 'nmecardnme'
+			, IFNULL(CASE CHAR_LENGTH(nmecardmobil)
+					WHEN '11' THEN concat(LEFT(nmecardmobil,3),'-',SUBSTRING(nmecardmobil,4,4),'-',RIGHT(nmecardmobil,4))
+					WHEN '10' THEN concat(LEFT(nmecardmobil,3),'-',SUBSTRING(nmecardmobil,4,3),'-',RIGHT(nmecardmobil,4))
+					END, '없음') as 'nmecardmobil'
+			, IFNULL(CASE LEFT(nmecardtel,2)
+				WHEN '02' THEN
+							CASE CHAR_LENGTH(nmecardtel)
+							WHEN '10' THEN concat('02','-',substring(nmecardtel,3,4),'-',RIGHT(nmecardtel,4))
+							WHEN '11' THEN concat('02','-',substring(nmecardtel,3,3),'-',RIGHT(nmecardtel,4))
+							END
+				ELSE 
+					CASE CHAR_LENGTH(nmecardtel)
+						WHEN '10' THEN concat(LEFT(nmecardtel,3),'-',substring(nmecardtel,4,3),'-',RIGHT(nmecardtel,4))
+						WHEN '11' THEN concat(LEFT(nmecardtel,3),'-',substring(nmecardtel,4,4),'-',RIGHT(nmecardtel,4))
+						WHEN '8' THEN concat(LEFT(nmecardtel,4),'-',substring(nmecardtel,4,4))
+						END
+				END,'없음') as 'nmecardtel'
+			, IF(nmecardemail LIKE '%@', '', nmecardemail) as 'nmecardemail'
+			, IFNULL((select company_name from compn_tb where company_seq = nmecard_tb.nmecardcompnseq),'없음') as 'nmecardcompnnme'
+			, nmecarduseat
+			, nmecardcretdate
+			, IF(date(nmecardcretdate)>date_add(now(), interval-1 day), 'Y', 'N') as 'nmecarddateuseat'		
+		FROM
+		nmecard_tb
+		WHERE
+			nmecarduseat = #{nmeCardUseAt}
+		AND cretrseq = ${cretrSeq}
+		LIMIT #{recordCountPerPage} OFFSET #{firstRecordIndex};
+</select>
+<!-- 명함 레코드 조회 -->
+<select id="selectNmeCardCount" parameterType="cvo" resultType="int">
+		SELECT
+			COUNT(nmecardseq) AS selectNmeCardCount
+		FROM
+		nmecard_tb
+		WHERE
+			nmecarduseat = #{nmeCardUseAt}
+		
+		AND nmecardcretdate > #{searchBgnDe}
+		AND cretrseq = #{cretrSeq}
+		;
+</select>
+<!-- 명함 등록  -->
+<!-- 자격증 목록 조회 -->
+<select id="selectLicnsList" parameterType="cvo" resultMap="cardvalue">
+	SELECT
+		licnsseq
+		, licnsnme
+		, licnstype
+		, licnscretdate
+	FROM
+		licns_tb
+	ORDER BY
+		licnsnme;
+</select>
+
+<insert id="CardInsert" parameterType="cvo">
+		INSERT
+		INTO
+		nmecard_tb(
+			cretrseq
+			, nmecardseq
+			, nmecardlastnme
+			, nmecardfirstnme
+			, nmecardsex
+			, nmecardpostnum
+			, nmecardbascadrs
+			, nmecarddetladrs
+			, nmecardmobil
+			, nmecardtel
+			, nmecardfax
+			, nmecardemail
+			, nmecardhompg
+			, nmecardhob
+			, nmecardinterst
+			, nmecardjobnme
+			, nmecardpostnnme
+			, nmecardcompnseq
+			, nmecarddepmtseq
+			, nmecardsns
+			, nmecardmesngr
+			, nmecarduseat
+			, nmecardcretdate
+			)
+		VALUES(
+			#{cretrSeq}
+			, (SELECT IFNULL(MAX(a.nmecardseq),0)+1 FROM nmecard_tb AS a)
+			, #{nmeCardLastNme}
+			, #{nmeCardFirstNme}
+			, #{nmeCardSex}
+			, concat(#{nmeCardPostNum},'')
+			, #{nmeCardBascAdrs}
+			, #{nmeCardDetlAdrs}
+			, concat(#{nmeCardMobil},#{nmeCardMobil2},#{nmeCardMobil3})
+			, concat(#{nmeCardTel},#{nmeCardTel2},#{nmeCardTel3})
+			, concat(#{nmeCardFax},#{nmeCardFax2},#{nmeCardFax3})
+			, concat(#{nmeCardEmail},'@',#{nmeCardEmail2})
+			, #{nmeCardHompg}
+			, #{nmeCardHob}
+			, #{nmeCardInterst}
+			, #{nmeCardJobNme}
+			, #{nmeCardPostnNme}
+			, #{nmeCardCompnSeq}
+			, #{nmeCardDepmtSeq}
+			, concat(#{nmeCardSns},'(',#{nmeCardSns2},')')
+			, concat(#{nmeCardMesngr},'(',#{nmeCardMesngr2},')')
+			, 'Y'
+			, SYSDATE()
+			);
+</insert>
+<!-- 명함 상세보기 조회 -->
+<select id="selectcardview" parameterType="cvo" resultMap="cardvalue" >
+		SELECT
+			cretrseq
+			, a.nmecardseq
+			, nmecardlastnme
+			, nmecardfirstnme
+			, concat(nmecardlastnme, nmecardfirstnme) as 'nmecardnme'
+			, nmecardsex
+			, nmecardpostnum
+			, nmecardbascadrs
+			, nmecarddetladrs
+			, IFNULL(CASE CHAR_LENGTH(nmecardmobil)
+					WHEN '11' THEN concat(LEFT(nmecardmobil,3),'-',SUBSTRING(nmecardmobil,4,4),'-',RIGHT(nmecardmobil,4))
+					WHEN '10' THEN concat(LEFT(nmecardmobil,3),'-',SUBSTRING(nmecarDmobil,4,3),'-',RIGHT(nmecarDmobil,4))
+					END, '없음') as 'nmecardmobil'
+			, IFNULL(CASE LEFT(nmecardtel,2)
+				WHEN '02' THEN
+							CASE CHAR_LENGTH(nmecardtel)
+							WHEN '10' THEN concat('02','-',substring(nmecardtel,3,4),'-',RIGHT(nmecardtel,4))
+							WHEN '9' THEN concat('02','-',substring(nmecarDtel,3,3),'-',RIGHT(nmecardtel,4))
+							END
+				ELSE 
+					CASE CHAR_LENGTH(nmecardtel)
+						WHEN '10' THEN concat(LEFT(nmecardtel,3),'-',substring(nmecardtel,4,3),'-',RIGHT(nmecardtel,4))
+						WHEN '11' THEN concat(LEFT(nmecardtel,3),'-',substring(nmecardtel,4,4),'-',RIGHT(nmecardtel,4))
+						WHEN '8' THEN concat(LEFT(nmecardtel,4),'-',substring(nmecardtel,4,4))
+						END
+				END,'없음') as 'nmecardtel'
+			, IFNULL(CASE LEFT(nmecardfax,2)
+				WHEN '02' THEN
+							CASE CHAR_LENGTH(nmecardfax)
+							WHEN '10' THEN concat('02','-',substring(nmecardfax,3,4),'-',RIGHT(nmecardfax,4))
+							WHEN '9' THEN concat('02','-',substring(nmecardfax,3,3),'-',RIGHT(nmecardfax,4))
+							END
+				ELSE 
+					CASE CHAR_LENGTH(nmecardfax)
+						WHEN '10' THEN concat(LEFT(nmecardfax,3),'-',substring(nmecardfax,4,3),'-',RIGHT(nmecardfax,4))
+						WHEN '11' THEN concat(LEFT(nmecardfax,3),'-',substring(nmecardfax,4,4),'-',RIGHT(nmecardfax,4))
+						WHEN '8' THEN concat(LEFT(nmecardfax,4),'-',substring(nmecardfax,4,4))
+						END
+				END,'없음') as 'nmecardfax'
+			, IF(nmecardemail LIKE '%@', ' ', nmecardemail) as 'nmecardemail'
+			, nmecardhompg
+			, nmecardhob
+			, nmecardinterst
+			, nmecardjobnme
+			, nmecardpostnnme
+			, a.nmecardcompnseq
+			, a.nmecarddepmtseq
+			, IFNULL((select company_name from compn_tb where company_seq = a.nmecardcompnseq),'없음') as 'nmecardcompnnme'
+			, IFNULL((select depart_name from depmt_tb where depart_seq = a.nmecarddepmtseq),'없음') as 'nmecarddepmtnme'
+			, IF(nmecardsns LIKE '%()%', ' ', nmecardsns) as 'nmecardsns'
+			, IF(nmecardmesngr LIKE '%()%', ' ', nmecardmesngr) as 'nmecardmesngr'
+			, nmecarduseat
+			, nmecardcretdate
+			, IFNULL(GROUP_CONCAT(b.licns_seq),'') AS 'licns_seq'
+		FROM
+		nmecard_tb a
+        LEFT JOIN licns_hav_tb b ON a.nmecardseq = b.nmecard_seq
+        LEFT JOIN compn_tb c ON a.nmecardcompnseq = c.company_seq
+        LEFT JOIN depmt_tb d ON a.nmecarddepmtseq = d.depart_seq
+		WHERE a.nmecardseq = #{nmeCardSeq};
+</select>
+<!-- 명함 수정 -->
+	<update id="updateNmeCard" parameterType="cvo">
+		UPDATE
+		nmecard_tb
+		SET
+			cretrseq = #{cretrSeq}
+			, nmecardseq = #{nmeCardSeq}
+			, nmecardlastnme = #{nmeCardLastNme}
+			, nmecardfirstnme = #{nmeCardFirstNme}
+			, nmecardsex = #{nmeCardSex}
+			, nmecardpostnum = #{nmeCardPostNum}
+			, nmecardbascadrs = #{nmeCardBascAdrs}
+			, nmecarddetladrs = #{nmeCardDetlAdrs}
+			, nmecardmobil = concat(#{nmeCardMobil},#{nmeCardMobil2},#{nmeCardMobil3})
+			, nmecardtel = concat(#{nmeCardTel},#{nmeCardTel2},#{nmeCardTel3})
+			, nmecardfax = concat(#{nmeCardFax},#{nmeCardFax2},#{nmeCardFax3})
+			, nmecardemail = concat(#{nmeCardEmail},'@',#{nmeCardEmail2})
+			, nmecardhompg = #{nmeCardHompg}
+			, nmecardhob = #{nmeCardHob}
+			, nmecardinterst = #{nmeCardInterst}
+			, nmecardjobnme = #{nmeCardJobNme}
+			, nmecardpostnnme = #{nmeCardPostnNme}
+			, nmecardcompnseq = #{nmeCardCompnSeq}
+			, nmecarddepmtseq = #{nmeCardDepmtSeq}
+			, nmecardsns = concat(#{nmeCardSns},'(',#{nmeCardSns2},')')
+			, nmecardmesngr = concat(#{nmeCardMesngr},'(',#{nmeCardMesngr2},')')
+			, nmecarduseat = #{nmeCardUseAt}
+				, nmecardcretdate = SYSDATE()
+			WHERE
+			nmecardseq = #{nmeCardSeq};
+	</update>
+	<!-- 명함 삭제 -->
+	<update id="deleteNmeCard" parameterType="int">
+		UPDATE
+		nmecard_tb
+		SET
+			  nmecarduseat = 'N'
+		WHERE
+			nmecardseq in (#{nmeCardSeq});
+	</update>
+	<!-- 명함 완전 삭제 -->
+	<update id="deleteNmeCardBin" parameterType="int">
+		UPDATE
+		nmecard_tb
+		SET
+			  nmecarduseat = 'D'
+		WHERE
+			nmecardseq in (#{nmeCardSeq});
+	</update>
+	<!-- 명함 복원 -->
+	<update id="recvyNmeCardBin" parameterType="int">
+		UPDATE
+		nmecard_tb
+		SET
+			  nmecarduseat = 'Y'
+		WHERE
+			nmecardseq in (#{nmeCardSeq});
+	</update>
+	<!--커뮤니케이션 리스트 조회-->
+	<select id="selectNmeCardComnctnList" parameterType="comnctnNmeCardVo" resultMap="nmeCardComnctnValues">
+		SELECT
+			  c.comnctntype
+			, c.nmecardseq
+			, c.memseq
+			, c.comnctntitl
+			, mem.memname
+			, c.comnctncretdate
+			, c.comnctnseq
+			, comnctncretrseq
+		FROM
+		comnctn_tb as c
+		LEFT JOIN mem_tb AS mem ON c.memseq = mem.memseq
+		WHERE
+			c.comnctnuseat = 'Y'
+		AND
+			c.nmecardseq = #{nmeCardSeq}
+		<if test="comnctnSearchAry == 0">
+			AND c.comnctntype IN('meeting','memo')   
+		</if>
+		<if test="comnctnSearchAry == 1">
+		   AND c.comnctntype='meeting'
+		</if>	
+		<if test="comnctnSearchAry == 2">
+		   AND c.comnctntype='memo'
+		</if>
+		<if test ="comnctnSearchCnd == 0">
+			AND c.comnctntitl LIKE CONCAT ('%', #{comnctnSearchWrd},'%')
+		</if>
+		<if test ="comnctnSearchCnd == 1">
+			AND mem.memname LIKE CONCAT ('%', #{comnctnSearchWrd},'%')
+		</if>
+		ORDER BY c.comnctncretdate DESC
+		LIMIT #{comnctnRecordCountPerPage} OFFSET #{comnctnFirstRecordIndex}
+		;
+	</select>
+	<!--나의 명함 커뮤니케이션 카운트  -->
+	<select id="selectNmeCardComnctnCount" parameterType="comnctnNmeCardVo" resultType="int">
+		SELECT
+			COUNT(cmt.comnctnseq) AS selectNmeCardCount
+		FROM
+		comnctn_tb AS cmt
+		LEFT JOIN mem_tb AS mem ON cmt.memseq = mem.memseq
+		WHERE
+			comnctnuseat = 'Y'
+		AND cmt.nmecardseq = #{nmeCardSeq}
+		<if test="comnctnType eq 1">
+			AND  cmt.comnctntype IN('meeting','memo')   
+		</if>
+		<if test="comnctnType eq 2">
+		   AND  cmt.comnctntype='meeting'
+		</if>	
+		<if test="comnctnType eq 3">
+		   AND  cmt.comnctntype='memo'
+		</if>
+		<if test ="comnctnSearchCnd == 0">
+			AND  cmt.comnctntitl LIKE CONCAT ('%', #{comnctnSearchWrd},'%')
+		</if>
+		<if test ="comnctnSearchCnd == 1">
+			AND mem.memname LIKE CONCAT ('%', #{comnctnSearchWrd},'%')
+		</if>
+		;
+	</select>
+	<!-- 커뮤니케이션 등록 -->
+	<insert id="insertNmeCardComnctn" parameterType="comnctnNmeCardVo">
+		
+		insert into comnctn_tb(
+			comnctnseq
+			, nmecardseq
+			, memseq
+			,comnctntitl
+			, comnctncontn
+			, comnctntype
+			, comnctncretdate
+			, comnctnuseat
+			, comnctnatnd
+			, comnctnnoatnd
+			, comnctncretrseq)
+			values(
+			(SELECT IFNULL(MAX(a.comnctnseq),0)+1 FROM comnctn_tb AS a)
+			, #{nmeCardSeq}
+			, #{memSeq}
+			, #{comnctnTitl}
+			, #{comnctnContn}
+			, #{comnctnType}
+			, sysdate()
+			, 'Y'
+			, #{comnctnAtnd}
+			, #{comnctnNoAtnd}
+			, #{memSeq});
+	</insert>
+	<!-- 참석자 등록 -->
+	<insert id="insertAtnd" parameterType="comnctnNmeCardVo">
+		INSERT
+		INTO
+		atnd_hav_tb (
+			atnd_hav_seq
+			, mem_seq
+			, comnctn_seq
+			, atnd_hav_cret_date
+			)
+		VALUES(
+			(SELECT IFNULL(MAX(atnd_hav_seq),0) + 1 AS atnd_hav_seq FROM atnd_hav_tb as l)
+			, #{comnctnAtnd}
+			, #{comnctnSeq}
+			, SYSDATE()
+		);
+	</insert>	
+</mapper>
