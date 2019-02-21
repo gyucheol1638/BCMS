@@ -13,3 +13,6 @@
 3.selectize.js 새로운 기술에 대한 지식 및 활용 방법을 배움
 
 구성원들과 함께 프로젝트를 진행하였으며 모르는 부분이 있을 시에는 서로 묻고 답하는 형식으로 문제를 해결했습니다.
+
+
+<iframe width="640" height="360" src="https://www.youtube.com/watch?v=eazVehopZ1s&feature=youtu.be" frameborder="0" gesture="media" allowfullscreen=""></iframe>
