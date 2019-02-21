@@ -15,4 +15,3 @@
 구성원들과 함께 프로젝트를 진행하였으며 모르는 부분이 있을 시에는 서로 묻고 답하는 형식으로 문제를 해결했습니다.
 
 https://youtu.be/eazVehopZ1s
-[![Watch the video](https://img.youtube.com/vi/eazVehopZ1s/maxresdefault.jpg)](https://youtu.be/eazVehopZ1s)
